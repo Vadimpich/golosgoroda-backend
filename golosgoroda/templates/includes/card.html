@@ -1,5 +1,5 @@
 {% load static %}
-{#<a href="{% url 'voting_detail' voting.id %}">#}
+<a href="{% url 'object_detail' voting.id %}">
     <div class="votingOptionWrapper animated shadow">
         <img class="votingOptionImage"
              src="{{ voting.image }}"
@@ -17,4 +17,4 @@
             </a>
         </div>
     </div>
-{#</a>#}
+</a>

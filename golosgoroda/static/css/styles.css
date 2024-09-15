@@ -267,7 +267,7 @@ button {
 
 .flexRowVotingOptions {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(8, 1fr);
     gap: 60px;
     justify-content: space-between;
     margin: 64px;
