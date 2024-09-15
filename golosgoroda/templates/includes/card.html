@@ -1,0 +1,20 @@
+{% load static %}
+{#<a href="{% url 'voting_detail' voting.id %}">#}
+    <div class="votingOptionWrapper animated shadow">
+        <img class="votingOptionImage"
+             src="{{ voting.image }}"
+             alt="Изображение {{ voting.name }}"/>
+        <div class="flexColumnVotingOption">
+            <h3 class="votingOptionSubtitle">{{ voting.name }}</h3>
+            <a href="#">
+                <button class="voteButton">
+                    <h3 class="voteButtonText">
+                        Добавить</h3>
+                    <img class="voteButtonIcon"
+                         src="{% static 'assets/plus.svg' %}"
+                         alt="Добавить"/>
+                </button>
+            </a>
+        </div>
+    </div>
+{#</a>#}

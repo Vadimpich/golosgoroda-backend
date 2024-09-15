@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %} Голосования {% endblock title %}
+{% block content %}
+    {% load static %}
+    {#    <div class="wrapperImageSection"#}
+    {#         style="--src:url('{% static "assets/background.png" %}')">#}
+    {#        <div class="flexColumn">#}
+    {#            <h1 class="promoText">#}
+    {#                Ваш голос — имя для города#}
+    {#            </h1>#}
+    {#        </div>#}
+    {#    </div>#}
+
+    <div class="flexColumnVotingList">
+        <h1 class="heroTitleAvailableVoting">Доступные голосования</h1>
+        <div class="flexRowVotingControls">
+            <form class="flexRow" method="GET" action="{% url 'index' %}">
+                <input
+                        type="text" name="object_name" placeholder="Поиск..."
+                        value="{{ request.GET.object_name }}">
+                <button type="submit" class="animated">
+                    <h3 class="voteButtonText">Искать</h3>
+                </button>
+            </form>
+
+            <a href="{% url 'selected' 0 %}">
+                <button class="animated shadow loginButton">
+                    К заявке
+                </button>
+            </a>
+        </div>
+        <div class="flexRowVotingOptions">
+            {% for voting in votings %}
+                {% include "includes/card.html" %}
+            {% endfor %}
+        </div>
+    </div>
+{% endblock content %}

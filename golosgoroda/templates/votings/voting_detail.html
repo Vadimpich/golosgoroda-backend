@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %} {{ voting.name|truncatewords:5 }} {% endblock title %}
+{% block content %}
+    {% load static %}
+    
+    <div class="flexColContainer">
+        <div class="contentBoxContainer">
+            <div class="flexRowContentContainer">
+                <div class="flexColumnTitleContainer">
+                    <h1 class="heroTitle">{{ voting.name }}</h1>
+                </div>
+                <img class="votingImage" src="{{ voting.image }}"
+                     alt="alt text"/>
+            </div>
+        </div>
+    </div>
+
+    <div class="flexColDetailContainer">
+        <h1 class="detailInfoHeroTitle">Подробная информация</h1>
+        <h3 class="detailInfoSubtitle">
+            {{ voting.info | linebreaks }}
+        </h3>
+    </div>
+
+{% endblock content %}
