@@ -5,8 +5,8 @@ from .models import Object, Voting, VotingObject
 
 @admin.register(Object)
 class ObjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'status', 'address')
-    search_fields = ('name', 'address')
+    list_display = ('name', 'status')
+    search_fields = ('name',)
     list_filter = ('status',)
     ordering = ('name',)
 

@@ -15,8 +15,6 @@ class Object(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES,
                               default='active', verbose_name='Статус')
     image = models.ImageField(storage=ms, verbose_name='Изображение')
-    address = models.CharField(max_length=255, verbose_name='Адрес объекта',
-                               null=True, blank=True)
 
     class Meta:
         verbose_name = 'Объект'
