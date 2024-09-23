@@ -52,6 +52,24 @@ VOTINGS = [
     },
 ]
 
+SELECTED = [
+    [
+        {**VOTINGS[1], 'count': 40},
+        {**VOTINGS[2], 'count': 50},
+        {**VOTINGS[3], 'count': 100},
+    ],
+    [
+        {**VOTINGS[0], 'count': 60},
+        {**VOTINGS[2], 'count': 60},
+        {**VOTINGS[3], 'count': 70},
+    ],
+    [
+        {**VOTINGS[0], 'count': 10},
+        {**VOTINGS[1], 'count': 15},
+        {**VOTINGS[2], 'count': 20},
+    ]
+]
+
 
 def index(request):
     object_name = request.GET.get('object_name', '')
@@ -84,7 +102,7 @@ def object_detail(request, pk):
 
 def selected(request, pk):
     context = {
-        'votings': [x for x in VOTINGS if x['selected']]
+        'votings': SELECTED[pk]
     }
     return render(
         request,
