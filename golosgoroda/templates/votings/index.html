@@ -22,16 +22,23 @@
                     <h3 class="voteButtonText">Искать</h3>
                 </button>
             </form>
-
-            <a href="{% url 'selected' 0 %}">
-                <button class="animated shadow loginButton">
+            {% if draft_voting %}
+                <a href="{% url 'voting_detail' draft_voting.id %}">
+                    <button class="animated shadow loginButton">
+                        К заявке
+                    </button>
+                </a>
+            {% else %}
+                <button class="disabledButton loginButton">
                     К заявке
                 </button>
-            </a>
+            {% endif %}
         </div>
         <div class="flexRowVotingOptions">
-            {% for voting in votings %}
-                {% include "includes/card.html" %}
+            {% for item in objects_with_status %}
+                {% with object=item.object is_added=item.is_added %}
+                    {% include "includes/card.html" %}
+                {% endwith %}
             {% endfor %}
         </div>
     </div>

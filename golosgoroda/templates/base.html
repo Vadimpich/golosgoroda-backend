@@ -3,7 +3,7 @@
 <html lang="ru">
 
 <head>
-    
+
     <meta charset="utf-8"/>
     <meta name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
@@ -20,10 +20,12 @@
 </head>
 
 <body>
-{% include 'includes/header.html' %}
-<main class="mainContent">
-    {% block content %} Контент не подвезли :( {% endblock content %}
-</main>
-{% include 'includes/footer.html' %}
+<div class="wrapper">
+    {% include 'includes/header.html' %}
+    <main class="mainContent">
+        {% block content %} Контент не подвезли :( {% endblock content %}
+    </main>
+    {% include 'includes/footer.html' %}
+</div>
 </body>
 </html>

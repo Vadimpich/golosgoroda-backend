@@ -1,25 +1,51 @@
 {% extends "base.html" %}
-{% block title %} {{ voting.name|truncatewords:5 }} {% endblock title %}
+{% block title %} Голосования {% endblock title %}
 {% block content %}
     {% load static %}
-    
-    <div class="flexColContainer">
-        <div class="contentBoxContainer">
-            <div class="flexRowContentContainer">
-                <div class="flexColumnTitleContainer">
-                    <h1 class="heroTitle">{{ voting.name }}</h1>
+    <div class="votingFlexCol">
+        <div class="votingFlexCol1">
+            <h1 class="votingHeroTitle">Новая заявка (Черновик)</h1>
+            <form 
+                    class="flexRowVotingControls">
+                <div class="votingNameInput">
+                    <h2 class="votingMediumTitleInput">Название
+                        голосования</h2>
                 </div>
-                <img class="votingImage" src="{{ voting.image }}"
-                     alt="alt text"/>
-            </div>
+                <div class="votingNameInput">
+                    <h2 class="numberInput">Дата проведения</h2>
+                </div>
+            </form>
+            {% for object in objects %}
+                <div class="votingContentBox1">
+                    <div class="votingFlexRow2">
+                        <img class="votingImage4" src="{{ object.image.url }}"
+                             alt="alt text"/>
+                        <div class="votingFlexCol2">
+                            <div class="votingFlexRow3">
+                                <h1 class="votingTitle"> {{ object.name }} </h1>
+                            </div>
+                            <div class="votingFieldBox">
+                                <h2 class="votingMediumTitle">Количество
+                                    голосов: </h2>
+                                <h2 class="numberInput">16</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            <form action="{% url 'delete_voting' voting.id %}"
+                  method="post" class="voteForm">
+                {% csrf_token %}
+                <button type="submit" class="animated deleteButton voteButton"
+                        data-object-id="{{ object.id }}">
+                    <h3 class="white voteButtonText">
+                        Удалить
+                    </h3>
+                    <img class="voteButtonIcon"
+                         src="{% static 'assets/trash.svg' %}"
+                         alt="Удалить"/>
+                </button>
+            </form>
         </div>
     </div>
-
-    <div class="flexColDetailContainer">
-        <h1 class="detailInfoHeroTitle">Подробная информация</h1>
-        <h3 class="detailInfoSubtitle">
-            {{ voting.info | linebreaks }}
-        </h3>
-    </div>
-
 {% endblock content %}

@@ -24,6 +24,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'votings.apps.VotingsConfig',
+    'storages',
+    'minio_storage',
 ]
 
 MIDDLEWARE = [
@@ -58,8 +60,12 @@ WSGI_APPLICATION = 'golosgoroda.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DATABASE_NAME'),
+        'USER': env('DATABASE_USER'),
+        'PASSWORD': env('DATABASE_PASSWORD'),
+        'HOST': env('DATABASE_HOST'),
+        'PORT': env('DATABASE_PORT'),
     }
 }
 
@@ -96,17 +102,12 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+DEFAULT_FILE_STORAGE = 'minio_storage.backends.MinioBackend'
 
-MINIO_ACCESS_KEY = os.getenv("MINIO_ROOT_USER")
-MINIO_SECRET_KEY = os.getenv("MINIO_ROOT_PASSWORD")
-MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME")
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
-
-AWS_ACCESS_KEY_ID = MINIO_ACCESS_KEY
-AWS_SECRET_ACCESS_KEY = MINIO_SECRET_KEY
-AWS_STORAGE_BUCKET_NAME = MINIO_BUCKET_NAME
-AWS_S3_ENDPOINT_URL = MINIO_ENDPOINT
-AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = True
-AWS_S3_FILE_OVERWRITE = False
+MINIO_STORAGE_ENDPOINT = env('MINIO_ENDPOINT')
+MINIO_STORAGE_ACCESS_KEY = env('MINIO_ROOT_USER')
+MINIO_STORAGE_SECRET_KEY = env('MINIO_ROOT_PASSWORD')
+MINIO_STORAGE_USE_HTTPS = False
+MINIO_STORAGE_MEDIA_BUCKET_NAME = env('MINIO_BUCKET_NAME')
+MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True
+MINIO_STORAGE_MEDIA_URL = f'http://{MINIO_STORAGE_ENDPOINT}/{MINIO_STORAGE_MEDIA_BUCKET_NAME}/'

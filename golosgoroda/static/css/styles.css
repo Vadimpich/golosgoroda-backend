@@ -2,6 +2,28 @@
     font: 400 24px/1.2 "Golos Text", Helvetica, Arial, serif;
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Высота экрана */
+}
+
+main {
+    flex: 1; /* Контент занимает оставшееся пространство */
+    padding: 20px;
+}
+
+
+footer p {
+    margin: 0;
+}
+
 a, u {
     text-decoration: none;
 }
@@ -16,6 +38,54 @@ input {
 
 button {
     cursor: pointer;
+}
+
+table {
+    width: 86%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 18px;
+    text-align: left;
+}
+
+thead tr {
+    background-color: #4d00ff;
+    color: white;
+    text-align: left;
+    font-weight: bold;
+}
+
+th, td {
+    padding: 12px 15px;
+    border: 1px solid #dddddd;
+}
+
+tbody tr {
+    border-bottom: 1px solid #dddddd;
+    background-color: #f9f9f9;
+    transition: background-color 0.2s ease-in-out;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f3f3f3;
+}
+
+tbody tr:hover {
+    background-color: #d3d3ff;
+    cursor: pointer;
+}
+
+tbody tr td {
+    color: #333;
+}
+
+tbody tr td a {
+    text-decoration: none;
+    color: inherit;
+}
+
+tbody tr td a:hover {
+    text-decoration: underline;
 }
 
 .mainContent {
@@ -163,6 +233,14 @@ button {
     color: white;
 }
 
+.disabledButton {
+    background-image: linear-gradient(180deg, #444444 0%, #666666 100%);
+}
+
+.deleteButton {
+    background-image: linear-gradient(180deg, #AA2222 0%, #CC6666 100%);
+}
+
 .loginSubtitle {
     display: flex;
     justify-content: center;
@@ -266,11 +344,13 @@ button {
 }
 
 .flexRowVotingOptions {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    /*display: grid;*/
+    /*grid-template-columns: repeat(4, 1fr);*/
+    display: flex;
+    flex-wrap: wrap;
     gap: 60px;
     justify-content: space-between;
-    margin: 64px;
+    margin: 64px auto;
 }
 
 @media (max-width: 767px) {
@@ -284,6 +364,7 @@ button {
 .votingOptionWrapper {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     align-items: center;
     gap: 30px 0;
     width: 275px;
@@ -302,6 +383,7 @@ button {
 
 .votingOptionImage {
     width: 100%;
+    height: 200px;
     border-radius: 16px 16px 0 0;
     -o-object-fit: cover;
     object-fit: cover;
@@ -310,14 +392,17 @@ button {
 .flexColumnVotingOption {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 34px 0;
+    justify-content: space-between; /* Центрирование вертикально */
+    align-items: center; /* Центрирование горизонтально */
+    gap: 20px; /* Установите желаемое расстояние между элементами */
     margin: 0 0 24px;
-    width: 89.82%;
+    width: 100%;
+
 }
 
 .votingOptionSubtitle {
     display: flex;
+    text-align: center;
     align-items: center;
     width: 100%;
     font: 700 20px/1.2 "Golos Text", Helvetica, Arial, serif;
@@ -338,10 +423,10 @@ button {
 
 .voteButton {
     display: flex;
-    justify-content: center;
+    justify-content: center; /* Центрирование текста и иконки */
     align-items: center;
     gap: 0 13px;
-    margin: 0 24px 0 23px;
+    margin: 0; /* Уберите дополнительные отступы */
     width: 200px;
     max-width: 100%;
     background-color: white;
@@ -359,6 +444,11 @@ button {
     text-align: center;
     text-decoration: none;
 }
+
+.white {
+    color: white;
+}
+
 
 .voteButtonIcon {
     width: 24px;
@@ -950,6 +1040,7 @@ button {
 
 .votingImage4 {
     width: 400px;
+    height: 250px;
     border-radius: 16px 0 0 16px;
     -o-object-fit: cover;
     object-fit: cover;
