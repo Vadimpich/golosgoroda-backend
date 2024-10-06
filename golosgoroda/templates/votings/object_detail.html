@@ -2,24 +2,27 @@
 {% block title %} {{ object.name|truncatewords:5 }} {% endblock title %}
 {% block content %}
     {% load static %}
-    
+
     <div class="flexColContainer">
-        <div class="contentBoxContainer">
-            <div class="flexRowContentContainer">
-                <div class="flexColumnTitleContainer">
-                    <h1 class="heroTitle">{{ object.name }}</h1>
+        {% if object.status == 'deleted' %}
+            <h1 class="votingHeroTitle">Объект удалён</h1>
+        {% else %}
+            <div class="contentBoxContainer">
+                <div class="flexRowContentContainer">
+                    <div class="flexColumnTitleContainer">
+                        <h1 class="heroTitle">{{ object.name }}</h1>
+                    </div>
+                    <img class="votingImage" src="{{ object.image.url }}"
+                         alt="alt text"/>
                 </div>
-                <img class="votingImage" src="{{ object.image.url }}"
-                     alt="alt text"/>
             </div>
-        </div>
-    </div>
+            </div>
 
-    <div class="flexColDetailContainer">
-        <h1 class="detailInfoHeroTitle">Подробная информация</h1>
-        <h3 class="detailInfoSubtitle">
-            {{ object.description | linebreaks }}
-        </h3>
-    </div>
-
+            <div class="flexColDetailContainer">
+                <h1 class="detailInfoHeroTitle">Подробная информация</h1>
+                <h3 class="detailInfoSubtitle">
+                    {{ object.description | linebreaks }}
+                </h3>
+            </div>
+        {% endif %}
 {% endblock content %}

@@ -349,7 +349,7 @@ tbody tr td a:hover {
     display: flex;
     flex-wrap: wrap;
     gap: 60px;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin: 64px auto;
 }
 
