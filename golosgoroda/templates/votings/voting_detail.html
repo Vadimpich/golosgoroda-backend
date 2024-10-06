@@ -4,6 +4,9 @@
     {% load static %}
     <div class="votingFlexCol">
         <div class="votingFlexCol1">
+        {% if voting.status == 'deleted' %}
+            <h1 class="votingHeroTitle">Заявка удалена</h1>
+        {% else %}
             <h1 class="votingHeroTitle">Новая заявка (Черновик)</h1>
             <form 
                     class="flexRowVotingControls">
@@ -46,6 +49,7 @@
                          alt="Удалить"/>
                 </button>
             </form>
+        {% endif %}
         </div>
     </div>
 {% endblock content %}
