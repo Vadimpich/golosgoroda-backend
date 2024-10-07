@@ -105,7 +105,9 @@ class ObjectCartAPIView(APIView):
 class VotingListAPIView(APIView):
     def get(self, request):
         user = get_const_user()
-        votings = Voting.objects.filter(user=user).exclude(status='deleted')
+        votings = Voting.objects.filter(user=user).exclude(
+            status__in=['draft', 'deleted']
+        )
 
         status = request.query_params.get('status', None)
         if status:
