@@ -150,16 +150,19 @@ class VotingDetailAPIView(APIView):
 def form_voting(request, pk):
     user = get_const_user()
     voting = get_object_or_404(Voting, pk=pk, user=user)
+
     if voting.status != 'draft':
         return Response(
             {"error": "Заявка уже сформирована или завершена"},
             status=status.HTTP_400_BAD_REQUEST
         )
+
     if not voting.title or not voting.voting_date:
         return Response(
             {"error": "Невозможно сформировать заявку без названия и даты"},
             status=status.HTTP_400_BAD_REQUEST
         )
+
     voting.status = 'formed'
     voting.formed_at = timezone.now()
     voting.save()
@@ -170,15 +173,22 @@ def form_voting(request, pk):
 def moderate_voting(request, pk):
     user = get_const_user()
     voting = get_object_or_404(Voting, pk=pk)
+
     if voting.status not in ['formed']:
         return Response({
             "error": "Заявка не может быть завершена или отклонена, так как ее статус: " + voting.get_status_display()},
             status=status.HTTP_400_BAD_REQUEST)
+
+    if 'action' not in request.data:
+        return Response({"error": "Не передано действие"},
+                        status=status.HTTP_400_BAD_REQUEST)
+
     action = request.data.get('action')
     if action not in ['complete', 'reject']:
         return Response({
             "error": "Некорректное действие: должно быть 'complete' или 'reject'"},
             status=status.HTTP_400_BAD_REQUEST)
+
     if action == 'complete':
         voting.status = 'completed'
         total_votes = VotingObject.objects.filter(voting=voting).aggregate(
@@ -186,6 +196,7 @@ def moderate_voting(request, pk):
         voting.total_votes = total_votes
     else:
         voting.status = 'rejected'
+
     voting.moderator = user
     voting.completed_at = timezone.now()
     voting.save()

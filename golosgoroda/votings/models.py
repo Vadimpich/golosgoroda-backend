@@ -100,7 +100,10 @@ class VotingObject(models.Model):
     class Meta:
         managed = True
         db_table = 'votings_votingobject'
-        unique_together = ('voting', 'object')
+        constraints = [
+            models.UniqueConstraint(fields=['voting', 'object'],
+                                    name='unique_voting_object')
+        ]
         verbose_name = 'Связь голосования и объекта'
         verbose_name_plural = 'Связи голосований и объектов'
 
