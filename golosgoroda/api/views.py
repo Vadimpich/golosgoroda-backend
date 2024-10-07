@@ -27,15 +27,18 @@ class ObjectListAPIView(APIView):
         if name:
             objects = objects.filter(name__icontains=name)
 
-        for obj in objects:
-            obj.draft_voting_id = (
-                Voting.objects.filter(user=user, status='draft').first().id
-                if Voting.objects.filter(user=user, status='draft').exists()
+        serializer_data = ObjectSerializer(objects, many=True).data
+
+        for obj in range(len(objects)):
+            draft = Voting.objects.filter(user=user, status='draft').first()
+            serializer_data[obj]['draft_id'] = (
+                draft.id
+                if draft and VotingObject.objects.filter(
+                    object=serializer_data[obj]['id'], voting=draft.id)
                 else None
             )
 
-        serializer = ObjectSerializer(objects, many=True)
-        return Response(serializer.data)
+        return Response(serializer_data)
 
     def post(self, request):
         data = request.data
