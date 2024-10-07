@@ -31,16 +31,16 @@ class ObjectListAPIView(APIView):
 
         serializer_data = ObjectSerializer(objects, many=True).data
 
-        for obj in range(len(objects)):
-            draft = Voting.objects.filter(user=user, status='draft').first()
-            serializer_data[obj]['draft_id'] = (
-                draft.id
-                if draft and VotingObject.objects.filter(
-                    object=serializer_data[obj]['id'], voting=draft.id)
-                else None
-            )
+        draft = Voting.objects.filter(user=user, status='draft').first()
+        response_data = {
+            'draft_voting': draft.id,
+            'draft_count': VotingObject.objects.filter(
+                object__in=objects, voting=draft
+            ).count() if draft else 0,
+            'data': serializer_data
+        }
 
-        return Response(serializer_data)
+        return Response(response_data)
 
     def post(self, request):
         data = request.data
@@ -76,8 +76,6 @@ class ObjectDetailAPIView(APIView):
         )
 
         image_path = obj.image.url
-
-        # Удаляем файл из MinIO
         minio_client.remove_object(settings.MINIO_STORAGE_MEDIA_BUCKET_NAME,
                                    image_path)
 
@@ -86,7 +84,20 @@ class ObjectDetailAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ObjectCartAPIView(APIView):
+@api_view(['POST'])
+def object_image(request, pk):
+    image = request.data['image']
+    obj = get_object_or_404(Object, pk=pk)
+    if obj.status == 'deleted':
+        return Response(
+            {'error': 'Объект удалён.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    obj.image = image
+    obj.save()
+    return Response(ObjectSerializer(obj).data)
+
+class ObjectDraftAPIView(APIView):
     def post(self, request, pk):
         user = get_const_user()
         draft = Voting.objects.filter(user=user, status='draft').first()

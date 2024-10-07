@@ -1,9 +1,9 @@
 from django.urls import path
 
 from .views import (
-    ObjectListAPIView, ObjectDetailAPIView, ObjectCartAPIView,
+    ObjectListAPIView, ObjectDetailAPIView, ObjectDraftAPIView,
     VotingListAPIView, VotingDetailAPIView, form_voting, moderate_voting,
-    UserAPIView, UserDetailAPIView, auth_user, deauth_user
+    UserAPIView, UserDetailAPIView, auth_user, deauth_user, object_image
 )
 
 urlpatterns = [
@@ -11,8 +11,10 @@ urlpatterns = [
     path('objects/', ObjectListAPIView.as_view(), name='object-list'),
     path('objects/<int:pk>/', ObjectDetailAPIView.as_view(),
          name='object-detail'),
-    path('objects/<int:pk>/cart/', ObjectCartAPIView.as_view(),
+    path('objects/<int:pk>/draft/', ObjectDraftAPIView.as_view(),
          name='add-to-voting'),
+    path('objects/<int:pk>/image/', object_image,
+         name='change-image'),
 
     # Заявки
     path('votings/', VotingListAPIView.as_view(), name='voting-list'),

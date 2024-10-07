@@ -8,6 +8,7 @@ class ObjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Object
         fields = '__all__'
+        read_only_fields = ['status', 'image']
 
 
 class VotingObjectSerializer(serializers.ModelSerializer):
@@ -15,7 +16,7 @@ class VotingObjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VotingObject
-        fields = ['object', 'votes_count']
+        fields = ['object', 'voting','votes_count']
 
 
 class VotingEditSerializer(serializers.ModelSerializer):
@@ -33,6 +34,7 @@ class VotingSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'status', 'created_at', 'formed_at',
                   'completed_at', 'voting_date', 'total_votes',
                   'user', 'moderator']
+        read_only_fields = ['status', 'total_votes']
 
     def get_user(self, obj):
         return obj.user.username
@@ -52,6 +54,7 @@ class VotingDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'status', 'created_at', 'formed_at',
                   'completed_at', 'voting_date', 'total_votes',
                   'user', 'moderator', 'objects']
+        read_only_fields = ['status', 'total_votes']
 
     def get_user(self, obj):
         return obj.user.username
