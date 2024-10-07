@@ -1,11 +1,13 @@
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from minio import Minio
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from golosgoroda import settings
 from votings.models import Object, Voting, VotingObject, User
 from .serializers import (ObjectSerializer, VotingSerializer,
                           VotingObjectSerializer, UserSerializer,
@@ -51,22 +53,36 @@ class ObjectListAPIView(APIView):
 
 class ObjectDetailAPIView(APIView):
     def get(self, request, pk):
-        service = get_object_or_404(Object, pk=pk, status='active')
-        serializer = ObjectSerializer(service)
+        obj = get_object_or_404(Object, pk=pk, status='active')
+        serializer = ObjectSerializer(obj)
         return Response(serializer.data)
 
     def put(self, request, pk):
-        service = get_object_or_404(Object, pk=pk, status='active')
-        serializer = ObjectSerializer(service, data=request.data, partial=True)
+        obj = get_object_or_404(Object, pk=pk, status='active')
+        serializer = ObjectSerializer(obj, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        service = get_object_or_404(Object, pk=pk, status='active')
-        service.status = 'deleted'
-        service.save()
+        obj = get_object_or_404(Object, pk=pk, status='active')
+
+        minio_client = Minio(
+            settings.MINIO_STORAGE_ENDPOINT,
+            access_key=settings.MINIO_STORAGE_ACCESS_KEY,
+            secret_key=settings.MINIO_STORAGE_SECRET_KEY,
+            secure=False
+        )
+
+        image_path = obj.image.url
+
+        # Удаляем файл из MinIO
+        minio_client.remove_object(settings.MINIO_STORAGE_MEDIA_BUCKET_NAME,
+                                   image_path)
+
+        obj.status = 'deleted'
+        obj.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -77,7 +93,7 @@ class ObjectCartAPIView(APIView):
         if not draft:
             draft = Voting(user=user, status='draft')
             draft.save()
-        VotingObject(object=pk, voting=draft.id).save()
+        VotingObject(object_id=pk, voting_id=draft.id).save()
         return Response(status=status.HTTP_201_CREATED)
 
     def put(self, request, pk):
@@ -85,8 +101,8 @@ class ObjectCartAPIView(APIView):
         draft = Voting.objects.filter(user=user, status='draft').first()
         if not draft:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        voting_object = get_object_or_404(VotingObject, object=pk,
-                                          voting=draft.id)
+        voting_object = get_object_or_404(VotingObject, object_id=pk,
+                                          voting_id=draft.id)
         serializer = VotingObjectSerializer(voting_object, data=request.data,
                                             partial=True)
         if serializer.is_valid():
@@ -99,8 +115,8 @@ class ObjectCartAPIView(APIView):
         draft = Voting.objects.filter(user=user, status='draft').first()
         if not draft:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        voting_object = get_object_or_404(VotingObject, object=pk,
-                                          voting=draft.id)
+        voting_object = get_object_or_404(VotingObject, object_id=pk,
+                                          voting_id=draft.id)
         voting_object.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -120,10 +136,10 @@ class VotingListAPIView(APIView):
         end_date = request.query_params.get('end_date', None)
 
         if start_date:
-            votings = votings.filter(created_at__gte=start_date)
+            votings = votings.filter(formed_at__gte=start_date)
 
         if end_date:
-            votings = votings.filter(created_at__lte=end_date)
+            votings = votings.filter(formed_at__lte=end_date)
 
         serializer = VotingSerializer(votings, many=True)
         return Response(serializer.data)
@@ -146,9 +162,14 @@ class VotingDetailAPIView(APIView):
 
     def delete(self, request, pk):
         voting = get_object_or_404(Voting, pk=pk)
+        if voting.status == 'deleted':
+            return Response(
+                {"error": "Заявка уже удалена"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         voting.status = 'deleted'
         voting.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_200_OK)
 
 
 @api_view(['Put'])

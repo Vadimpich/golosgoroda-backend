@@ -27,7 +27,6 @@ class VotingEditSerializer(serializers.ModelSerializer):
 class VotingSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     moderator = serializers.SerializerMethodField()
-    total_votes = serializers.ReadOnlyField(source='total_votes')
 
     class Meta:
         model = Voting
@@ -39,7 +38,7 @@ class VotingSerializer(serializers.ModelSerializer):
         return obj.user.username
 
     def get_moderator(self, obj):
-        return obj.moderator.username
+        return obj.moderator.username if obj.moderator else None
 
 
 class VotingDetailSerializer(serializers.ModelSerializer):
@@ -58,7 +57,7 @@ class VotingDetailSerializer(serializers.ModelSerializer):
         return obj.user.username
 
     def get_moderator(self, obj):
-        return obj.moderator.username
+        return obj.moderator.username if obj.moderator else None
 
 
 class UserSerializer(serializers.ModelSerializer):

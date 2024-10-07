@@ -48,20 +48,17 @@ class Voting(models.Model):
     )
     formed_at = models.DateTimeField(
         verbose_name='Дата формирования',
-        null=True,
+        null=True, blank=True
     )
     completed_at = models.DateTimeField(
         verbose_name='Дата завершения',
-        null=True,
+        null=True, blank=True
     )
     voting_date = models.DateTimeField(
         verbose_name='Дата голосования',
         null=True,
     )
-    total_votes = models.IntegerField(
-        null=True, blank=True,
-        verbose_name='Кол-во голосов'
-    ),
+    total_votes = models.IntegerField(default=0)
     user = models.ForeignKey(
         User, on_delete=models.CASCADE,
         related_name='votings', verbose_name='Создатель'
