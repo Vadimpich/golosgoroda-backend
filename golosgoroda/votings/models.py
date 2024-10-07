@@ -35,6 +35,7 @@ class Voting(models.Model):
 
     title = models.CharField(
         max_length=255,
+        null=True,
         verbose_name='Название голосования'
     )
     status = models.CharField(
@@ -54,9 +55,13 @@ class Voting(models.Model):
         null=True,
     )
     voting_date = models.DateTimeField(
-        null=True, blank=True,
-        verbose_name='Дата проведения',
+        verbose_name='Дата голосования',
+        null=True,
     )
+    total_votes = models.IntegerField(
+        null=True, blank=True,
+        verbose_name='Кол-во голосов'
+    ),
     user = models.ForeignKey(
         User, on_delete=models.CASCADE,
         related_name='votings', verbose_name='Создатель'
