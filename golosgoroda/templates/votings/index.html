@@ -23,14 +23,19 @@
                 </button>
             </form>
             {% if draft_voting %}
-                <a href="{% url 'voting_detail' draft_voting.id %}">
-                    <button class="animated shadow loginButton">
-                        К заявке
-                    </button>
-                </a>
+                <div class="relative">
+                    <a href="{% url 'voting_detail' draft_voting.id %}">
+                        <button class="animated shadow loginButton">
+                            Заявка
+                        </button>
+                    </a>
+                    {% if draft_voting_object_count > 0 %}
+                        <span class="objectCountBadge">{{ draft_voting_object_count }}</span>
+                    {% endif %}
+                </div>
             {% else %}
                 <button class="disabledButton loginButton">
-                    К заявке
+                    Заявка
                 </button>
             {% endif %}
         </div>

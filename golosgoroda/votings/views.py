@@ -22,19 +22,33 @@ class ObjectListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         draft_voting = Voting.objects.filter(
             user=self.request.user, status='draft'
         ).first()
+
         objects_with_status = []
-        for obj in context['objects']:
-            is_added = VotingObject.objects.filter(voting=draft_voting,
-                                                   object=obj).exists()
-            objects_with_status.append({
-                'object': obj,
-                'is_added': is_added
-            })
+
+        if draft_voting:
+            draft_voting_object_count = VotingObject.objects.filter(
+                voting=draft_voting
+            ).count()
+
+            for obj in context['objects']:
+                is_added = VotingObject.objects.filter(voting=draft_voting,
+                                                       object=obj).exists()
+                objects_with_status.append({
+                    'object': obj,
+                    'is_added': is_added
+                })
+
+            context['draft_voting_object_count'] = draft_voting_object_count
+        else:
+            context['draft_voting_object_count'] = 0
+
         context['draft_voting'] = draft_voting
         context['objects_with_status'] = objects_with_status
+
         return context
 
 
