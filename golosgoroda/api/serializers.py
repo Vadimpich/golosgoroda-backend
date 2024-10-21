@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from rest_framework import serializers
 
 from users.models import CustomUser
@@ -69,3 +71,13 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['username', 'email', 'password', 'is_staff', 'is_superuser']
+
+    def get_fields(self):
+        new_fields = OrderedDict()
+        for name, field in super().get_fields().items():
+            field.required = False
+            new_fields[name] = field
+        return new_fields
+
+    def validate(self, attrs):
+        return attrs

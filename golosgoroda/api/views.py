@@ -2,7 +2,7 @@ import uuid
 
 import redis
 from django.conf import settings
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, logout
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -12,7 +12,7 @@ from minio import Minio
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, authentication_classes, \
     permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -23,7 +23,6 @@ from .serializers import (ObjectSerializer, VotingSerializer,
                           VotingObjectSerializer, UserSerializer,
                           VotingDetailSerializer, VotingEditSerializer)
 
-# Connect to our Redis instance
 session_storage = redis.StrictRedis(host=settings.REDIS_HOST,
                                     port=settings.REDIS_PORT)
 
@@ -164,11 +163,21 @@ class ObjectDraftAPIView(APIView):
 
 
 class VotingListAPIView(APIView):
+    @permission_classes((IsAuthenticated,))
     def get(self, request):
         user = request.user
-        votings = Voting.objects.filter(user=user).exclude(
-            status__in=['draft', 'deleted']
-        )
+        if not user.is_authenticated:
+            return Response(
+                {'error': 'Доступно только авторизованным пользователям.'},
+                status=401
+            )
+
+        if user.is_staff or user.is_superuser:
+            votings = Voting.objects.all()
+        else:
+            votings = Voting.objects.filter(user=user).exclude(
+                status__in=['draft', 'deleted']
+            )
 
         status = request.query_params.get('status', None)
         if status:
@@ -239,8 +248,10 @@ def form_voting(request, pk):
     return Response(VotingSerializer(voting).data)
 
 
-@csrf_exempt
+
 @api_view(['Put'])
+@csrf_exempt
+@permission_classes([IsManager])
 def moderate_voting(request, pk):
     user = request.user
     voting = get_object_or_404(Voting, pk=pk)
@@ -324,7 +335,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
 
-
+@swagger_auto_schema(method='POST', request_body=UserSerializer)
 @authentication_classes([])
 @csrf_exempt
 @api_view(['POST'])

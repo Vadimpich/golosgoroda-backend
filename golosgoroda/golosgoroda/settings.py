@@ -50,9 +50,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'api.middleware.SessionMiddleware',
 ]
 
 ROOT_URLCONF = 'golosgoroda.urls'
+
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000']
 
 TEMPLATES = [
     {
