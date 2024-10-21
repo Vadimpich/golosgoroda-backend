@@ -1,10 +1,14 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework import routers
 
 from .views import (
     ObjectListAPIView, ObjectDetailAPIView, ObjectDraftAPIView,
     VotingListAPIView, VotingDetailAPIView, form_voting, moderate_voting,
-    UserAPIView, UserDetailAPIView, auth_user, deauth_user, object_image
+    object_image, UserViewSet, login_view, logout_view
 )
+
+router = routers.DefaultRouter()
+router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
     # Услуги
@@ -26,10 +30,7 @@ urlpatterns = [
          name='moderate-voting'),
 
     # Пользователи
-    path('users/register/', UserAPIView.as_view(),
-         name='user-register'),
-    path('users/<int:pk>/', UserDetailAPIView.as_view(),
-         name='user-edit'),
-    path('users/auth', auth_user, ),
-    path('users/logout/', deauth_user, ),
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+    path('', include(router.urls)),
 ]

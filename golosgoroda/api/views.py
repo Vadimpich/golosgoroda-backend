@@ -1,28 +1,49 @@
+import uuid
+
+import redis
+from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from drf_yasg.utils import swagger_auto_schema
 from minio import Minio
-from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework import status, viewsets
+from rest_framework.decorators import api_view, authentication_classes, \
+    permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from golosgoroda import settings
+from users.permissions import IsAdmin, IsManager, IsAuthor
 from votings.models import Object, Voting, VotingObject, User
 from .serializers import (ObjectSerializer, VotingSerializer,
                           VotingObjectSerializer, UserSerializer,
                           VotingDetailSerializer, VotingEditSerializer)
 
-USER_ID = 1
+# Connect to our Redis instance
+session_storage = redis.StrictRedis(host=settings.REDIS_HOST,
+                                    port=settings.REDIS_PORT)
 
 
-def get_const_user():
-    return User.objects.get(pk=USER_ID)
+def method_permission_classes(classes):
+    def decorator(func):
+        def decorated_func(self, *args, **kwargs):
+            self.permission_classes = classes
+            self.check_permissions(self.request)
+            return func(self, *args, **kwargs)
+
+        return decorated_func
+
+    return decorator
 
 
 class ObjectListAPIView(APIView):
     def get(self, request):
-        user = get_const_user()
+        user = request.user
+
         objects = Object.objects.filter(status='active')
 
         name = request.query_params.get('name', None)
@@ -31,9 +52,12 @@ class ObjectListAPIView(APIView):
 
         serializer_data = ObjectSerializer(objects, many=True).data
 
-        draft = Voting.objects.filter(user=user, status='draft').first()
+        if user.is_authenticated:
+            draft = Voting.objects.filter(user=user, status='draft').first()
+        else:
+            draft = None
         response_data = {
-            'draft_voting': draft.id,
+            'draft_voting': draft.id if draft else None,
             'draft_count': VotingObject.objects.filter(
                 object__in=objects, voting=draft
             ).count() if draft else 0,
@@ -42,6 +66,8 @@ class ObjectListAPIView(APIView):
 
         return Response(response_data)
 
+    @swagger_auto_schema(request_body=ObjectSerializer)
+    @method_permission_classes((IsManager,))
     def post(self, request):
         data = request.data
         serializer = ObjectSerializer(data=data)
@@ -57,6 +83,8 @@ class ObjectDetailAPIView(APIView):
         serializer = ObjectSerializer(obj)
         return Response(serializer.data)
 
+    @swagger_auto_schema(request_body=ObjectSerializer)
+    @method_permission_classes((IsManager,))
     def put(self, request, pk):
         obj = get_object_or_404(Object, pk=pk, status='active')
         serializer = ObjectSerializer(obj, data=request.data, partial=True)
@@ -65,6 +93,7 @@ class ObjectDetailAPIView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @method_permission_classes((IsAdmin,))
     def delete(self, request, pk):
         obj = get_object_or_404(Object, pk=pk, status='active')
 
@@ -84,6 +113,7 @@ class ObjectDetailAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@permission_classes((IsAuthor,))
 @api_view(['POST'])
 def object_image(request, pk):
     image = request.data['image']
@@ -97,9 +127,10 @@ def object_image(request, pk):
     obj.save()
     return Response(ObjectSerializer(obj).data)
 
+
 class ObjectDraftAPIView(APIView):
     def post(self, request, pk):
-        user = get_const_user()
+        user = request.user
         draft = Voting.objects.filter(user=user, status='draft').first()
         if not draft:
             draft = Voting(user=user, status='draft')
@@ -108,7 +139,7 @@ class ObjectDraftAPIView(APIView):
         return Response(status=status.HTTP_201_CREATED)
 
     def put(self, request, pk):
-        user = get_const_user()
+        user = request.user
         draft = Voting.objects.filter(user=user, status='draft').first()
         if not draft:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -122,7 +153,7 @@ class ObjectDraftAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        user = get_const_user()
+        user = request.user
         draft = Voting.objects.filter(user=user, status='draft').first()
         if not draft:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -134,7 +165,7 @@ class ObjectDraftAPIView(APIView):
 
 class VotingListAPIView(APIView):
     def get(self, request):
-        user = get_const_user()
+        user = request.user
         votings = Voting.objects.filter(user=user).exclude(
             status__in=['draft', 'deleted']
         )
@@ -162,6 +193,7 @@ class VotingDetailAPIView(APIView):
         serializer = VotingDetailSerializer(voting)
         return Response(serializer.data)
 
+    @swagger_auto_schema(request_body=VotingDetailSerializer)
     def put(self, request, pk):
         voting = get_object_or_404(Voting, pk=pk)
         serializer = VotingEditSerializer(voting, data=request.data,
@@ -183,9 +215,10 @@ class VotingDetailAPIView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
+@csrf_exempt
 @api_view(['Put'])
 def form_voting(request, pk):
-    user = get_const_user()
+    user = request.user
     voting = get_object_or_404(Voting, pk=pk, user=user)
 
     if voting.status != 'draft':
@@ -206,9 +239,10 @@ def form_voting(request, pk):
     return Response(VotingSerializer(voting).data)
 
 
+@csrf_exempt
 @api_view(['Put'])
 def moderate_voting(request, pk):
-    user = get_const_user()
+    user = request.user
     voting = get_object_or_404(Voting, pk=pk)
 
     if voting.status not in ['formed']:
@@ -247,34 +281,71 @@ class VotingObjectList(APIView):
         return Response(serializer.data)
 
 
-class UserAPIView(APIView):
-    def post(self, request):
-        serializer = UserSerializer(data=request.data)
+class UserViewSet(viewsets.ModelViewSet):
+    """Класс, описывающий методы работы с пользователями
+    Осуществляет связь с таблицей пользователей в базе данных
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    model_class = User
+
+    @swagger_auto_schema(request_body=UserSerializer)
+    def create(self, request):
+        """
+        Функция регистрации новых пользователей
+        Если пользователя c указанным в request username ещё нет, в БД будет добавлен новый пользователь.
+        """
+        if self.model_class.objects.filter(
+                username=request.data['username']).exists():
+            return Response({'status': 'Exist'}, status=400)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # print(serializer.data) - что это за строчка?!
+            self.model_class.objects.create_user(
+                username=request.data['username'],
+                email=serializer.data['email'],
+                password=serializer.data['password'],
+                is_superuser=serializer.data['is_superuser'],
+                is_staff=serializer.data['is_staff']
+            )
+            return Response({'status': 'Success'}, status=200)
+        return Response(
+            {'status': 'Error', 'error': serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def get_permissions(self):
+        if self.action in ['create']:
+            permission_classes = [AllowAny]
+        elif self.action in ['list']:
+            permission_classes = [IsAdmin | IsManager]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]
 
 
-class UserDetailAPIView(APIView):
-    def put(self, request, pk):
-        try:
-            user = User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        serializer = UserSerializer(user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+@authentication_classes([])
+@csrf_exempt
 @api_view(['POST'])
-def auth_user(request):
-    return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+@permission_classes([AllowAny])
+def login_view(request):
+    username = request.data["username"]
+    password = request.data["password"]
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        random_key = str(uuid.uuid4())
+        session_storage.set(random_key, username)
+
+        response = Response("{'status': 'ok'}")
+        response.set_cookie("session_id", random_key)
+
+        return response
+    else:
+        return Response("{'status': 'error', 'error': 'Login failed!'}")
 
 
-@api_view(['POST'])
-def deauth_user(request):
-    return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+@swagger_auto_schema(method='post')
+def logout_view(request):
+    logout(request._request)
+    return Response({'status': 'Success'})

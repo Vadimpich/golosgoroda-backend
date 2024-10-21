@@ -1,6 +1,6 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from users.models import CustomUser
 from votings.models import Object, Voting, VotingObject
 
 
@@ -64,15 +64,8 @@ class VotingDetailSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_staff = serializers.BooleanField(default=False, required=False)
+    is_superuser = serializers.BooleanField(default=False, required=False)
     class Meta:
-        model = User
-        fields = ['username', 'password', 'email']
-
-    def create(self, validated_data):
-        user = User(
-            username=validated_data['username'],
-            email=validated_data['email']
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
+        model = CustomUser
+        fields = ['username', 'email', 'password', 'is_staff', 'is_superuser']
